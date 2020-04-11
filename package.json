@@ -1,0 +1,26 @@
+{
+  "name": "wsec",
+  "version": "1.0.1",
+  "description": "Nodejs Websocket. Easy and customize-able",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ammasum/wsec.git"
+  },
+  "keywords": [
+    "Websocket",
+    "Nodejs"
+  ],
+  "author": "AM Masum",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ammasum/wsec/issues"
+  },
+  "homepage": "https://github.com/ammasum/wsec#readme",
+  "dependencies": {
+    "http-headers": "^3.0.2"
+  }
+}

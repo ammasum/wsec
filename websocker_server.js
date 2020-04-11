@@ -1,12 +1,12 @@
 const net = require('net');
 const connectionHandler = require('./connection_handler');
 module.exports = class {
-    connectedList = [];
     server;
     host = 'localhost';
     port = '8080';
 
-
+    // params option is for server option. Like port and host
+    // params handler is for handler event and function. Like on data, on end
     constructor(options, handler) {
         if(typeof options !== 'object') {
             handler = options;
