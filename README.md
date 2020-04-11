@@ -8,6 +8,7 @@ npm install wsec --save
 
 # use
 
-const wsec = require('wsec');
+```const wsec = require('wsec');
 
 new wsec(options, handler);
+```
