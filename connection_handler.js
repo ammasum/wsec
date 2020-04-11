@@ -56,7 +56,6 @@ module.exports = class {
         });
 
         this.socket.on('end', () => {
-            console.log("Connection Close");
             this.events.hasOwnProperty('end') ? this.events.end(this.socketInstanceInfo()) : null;
         });
     }
