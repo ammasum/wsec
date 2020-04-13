@@ -7,4 +7,7 @@ new wsec({port: 8080}, (socket) => {
     socket.on('data', (connection, data) => {
         console.log(data);
     });
+    socket.on('end', (connection) => {
+        console.log("connection closed");
+    });
 });

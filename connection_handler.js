@@ -34,6 +34,9 @@ module.exports = class {
         const decoded = [];
         const encoded = [];
         const mask = [data[2], data[3], data[4], data[5]];
+        if(data[0] === 136) {
+            return "CONNECTION_CLOSE";
+        }
         for(let i = 6; i < data.length; i++) {
             encoded.push(data[i]);
         }
@@ -42,7 +45,7 @@ module.exports = class {
         }
         return this.arrayToString(decoded);
     }
-
+    
     setEventHandler() {
         this.socket.on('data', (data) => {
             if(!this.handShaked) {
@@ -52,7 +55,11 @@ module.exports = class {
                 this.events.hasOwnProperty('connected') ? this.events.connected(this.socketInstanceInfo()) : null;
                 return;
             }
-            this.events.hasOwnProperty('data') ? this.events.data(this.socketInstanceInfo(), this.encodeData(data)) : null;
+            const encodedData = this.encodeData(data);
+            if(typeof encodedData === 'string' && encodedData === 'CONNECTION_CLOSE') {
+                return;
+            }
+            this.events.hasOwnProperty('data') ? this.events.data(this.socketInstanceInfo(), encodedData) : null;
         });
 
         this.socket.on('end', () => {
