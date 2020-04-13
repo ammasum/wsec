@@ -55,7 +55,7 @@ module.exports = class {
                 this.handShake();
                 this.handShaked = true; // enable hand shake to prevent hand shake again
                 this.events.hasOwnProperty('connected') ?
-                    this.events.connected(this.socketInstanceInfo()) :null;
+                    this.events.connected(this.socketInstanceInfo()) : null;
                 return;
             }
             const encodedData = this.encodeData(data);
@@ -75,7 +75,7 @@ module.exports = class {
     socketInstanceInfo() {
         return {
             write: text => {
-                this.socket.write(this.constructReply(JSON.stringify(text)));
+                this.socket.write(this.constructReply(text));
             },
             headers: this.headers,
             id: this.connectionID
