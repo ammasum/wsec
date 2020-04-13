@@ -48,17 +48,22 @@ module.exports = class {
     
     setEventHandler() {
         this.socket.on('data', (data) => {
+
+            // if not hand shake then first data will be hand shake
             if(!this.handShaked) {
                 this.parseHeader(data);
                 this.handShake();
-                this.handShaked = true;
-                this.events.hasOwnProperty('connected') ? this.events.connected(this.socketInstanceInfo()) : null;
+                this.handShaked = true; // enable hand shake to prevent hand shake again
+                this.events.hasOwnProperty('connected') ?
+                    this.events.connected(this.socketInstanceInfo()) :null;
                 return;
             }
             const encodedData = this.encodeData(data);
             if(typeof encodedData === 'string' && encodedData === 'CONNECTION_CLOSE') {
                 return;
             }
+
+            // checking data event handler pass throw constructor
             this.events.hasOwnProperty('data') ? this.events.data(this.socketInstanceInfo(), encodedData) : null;
         });
 
