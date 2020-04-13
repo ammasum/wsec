@@ -4,7 +4,7 @@ Nodejs websocket. Easy and customize-able
 
 # install
 
-npm install wsec --save
+> `npm install wsec --save`
 
 # use
 
