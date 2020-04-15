@@ -57,10 +57,18 @@ module.exports = class {
     }
 
     handShake() {
-        this.write(this.handShakeHeader());
+        this.writeOnSocket(this.handShakeHeader());
     }
 
-    write(data) {
+    write(msg) {
+        this.writeOnSocket(this.formatMessage(msg));
+    }
+
+    send(msg) {
+        this.writeOnSocket(this.formatMessage(msg));
+    }
+
+    writeOnSocket(data) {
         this.socket.write(data);
     }
 }
