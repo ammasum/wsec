@@ -20,7 +20,7 @@ const handler = (socket) => {
     // each connection params contain header information and write methods
     socket.on('connected', (connection) => {
         console.log('connected new user');
-        // connection.write("congras to new user"); //to write or send text to connected user
+        // connection.send("congras to new user"); //to write or send text to connected user
     });
     socket.on('data', (connection, data) => {
         console.log(data);
