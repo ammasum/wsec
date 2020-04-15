@@ -1,9 +1,11 @@
 const net = require('net');
+const Events = require('events');
 const connectionHandler = require('./connection_handler');
 module.exports = class {
     server;
     host = 'localhost';
     port = '8080';
+    eventHandler;
 
     // params option is for server option. Like port and host
     // params handler is for handler event and function. Like on data, on end
@@ -13,13 +15,24 @@ module.exports = class {
             options = {};
         }
         this.parseOptions(options);
-        this.createServer(handler);
+        this.parseHandler(handler)
+        this.createServer();
     }
 
-    createServer(handler) {
+    parseHandler(handler) {
+        this.eventHandler = new Events();
+        const socket = {
+            on: (event, handler) => {
+                this.eventHandler.on(event, handler)
+            }
+        }
+        handler(socket);
+    }
+
+    createServer() {
         this.server = net.createServer();
         this.server.on('connection', (socket) => {
-            new connectionHandler(socket, handler);
+            new connectionHandler(socket, this.eventHandler);
         })
         this.server.listen(this.port, this.host, () => {
             console.log(`Server started at http://${this.host}:${this.port}`);

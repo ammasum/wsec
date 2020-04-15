@@ -11,3 +11,4 @@ new wsec({port: 8080}, (socket) => {
         console.log("connection closed");
     });
 });
+
