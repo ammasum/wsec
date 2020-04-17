@@ -11,8 +11,7 @@ module.exports = class {
     }
 
     formatMessage(dataString) {
-        const json = dataString;
-        const jsonByteLength = Buffer.byteLength(json);
+        const jsonByteLength = Buffer.byteLength(dataString);
         // Note: we're not supporting > 65535 byte payloads at this stage 
         const lengthByteCount = jsonByteLength < 126 ? 0 : 2; 
         const payloadLength = lengthByteCount === 0 ? jsonByteLength : 126; 
@@ -21,13 +20,13 @@ module.exports = class {
         // payload contains text data 
         buffer.writeUInt8(0b10000001, 0); 
         buffer.writeUInt8(payloadLength, 1); 
-        // Write the length of the JSON payload to the second byte 
+        // Write the length of the STRING payload to the second byte 
         let payloadOffset = 2; 
         if (lengthByteCount > 0) { 
           buffer.writeUInt16BE(jsonByteLength, 2); payloadOffset += lengthByteCount; 
         } 
-        // Write the JSON data to the data buffer 
-        buffer.write(json, payloadOffset); 
+        // Write the STRING data to the data buffer 
+        buffer.write(dataString, payloadOffset); 
         return buffer;
     }
 

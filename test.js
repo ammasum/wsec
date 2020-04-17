@@ -1,12 +1,15 @@
+const fs = require('fs');
 const wsec = require('./index');
 
 new wsec({port: 8080}, (socket) => {
     socket.on('connected', (connection) => {
-        connection.send("Hello connection");
         console.log('connected new user');
     });
     socket.on('data', (connection, data) => {
-        console.log(data);
+        fs.writeFile('./test.jpg', data , () => {
+            console.log("Finish");
+        });
+        // connection.send(data);
     });
     socket.on('end', (connection) => {
         console.log("connection closed");

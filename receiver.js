@@ -3,6 +3,12 @@ module.exports = class {
     socket;
     handler;
     sender;
+    endConnection = false;
+    enabledLongStream = false;
+    decodedStreamData = [];
+    encodedStreamData = [];
+    streamPayloadLength = 0;
+    mask = [];
 
     constructor(socket, handler, sender) {
         this.socket = socket;
@@ -27,13 +33,17 @@ module.exports = class {
             this.handler.emit('connected', this.sender);
             return;
         }
-        const encodedData = this.encodeData(data);
-        if(typeof encodedData === 'string' && encodedData === 'CONNECTION_CLOSE') {
+        this.setDecodeData(data);
+        const decodedData = this.decodeData();
+        if(typeof decodedData === 'string' && decodedData === 'CONNECTION_CLOSE') {
+            return;
+        }
+        if(typeof decodedData === 'string' && decodedData === 'BUFFER_CONTINUE') {
             return;
         }
 
         // checking data event handler pass throw constructor
-        this.handler.emit('data', this.sender, encodedData);
+        this.handler.emit('data', this.sender, decodedData);
     }
 
     arrayToString(data) {
@@ -44,20 +54,61 @@ module.exports = class {
         return str;
     }
 
-    encodeData(data) {
-        const decoded = [];
-        const encoded = [];
-        const mask = [data[2], data[3], data[4], data[5]];
+    resetDecodeData() {
+        this.enabledLongStream = false;
+        this.streamPayloadLength = 0;
+        this.decodedStreamData = [];
+        this.encodedStreamData = [];
+    }
+
+    setDecodeData(data) {
+        if(this.enabledLongStream) {
+            this.encodedStreamData = Buffer.concat([this.encodedStreamData, data], this.encodedStreamData.length + data.length);
+            if(this.encodedStreamData.length === this.streamPayloadLength) {
+                this.enabledLongStream = false;
+            }
+            return;
+        } 
         if(data[0] === 136) {
+            this.endConnection = true;
+            return;
+        }
+        
+        let offset = 2;
+        if(data[0] < 129) {
+            this.enabledLongStream = true;
+        }
+        if(data[1] <= 253) {
+            this.streamPayloadLength = data[1] - 128;
+        } else if(data[1] === 254) {
+            this.streamPayloadLength = (data[offset++] << 8) | (data[offset++]);
+        } else {
+            let payloadLength = (data[offset++] << 8) | (data[offset++]);
+            payloadLength = (payloadLength << 8) | (data[offset++]);
+            payloadLength = (payloadLength << 8) | (data[offset++]);
+            payloadLength = (payloadLength << 8) | (data[offset++]);
+            payloadLength = (payloadLength << 8) | (data[offset++]);
+            payloadLength = (payloadLength << 8) | (data[offset++]);
+            payloadLength = (payloadLength << 8) | (data[offset++]);
+            this.streamPayloadLength = payloadLength;
+        }
+        this.mask = [data[offset++], data[offset++], data[offset++], data[offset++]];
+        this.encodedStreamData = data.slice(offset);
+    }
+
+    decodeData() {
+        if(this.endConnection) {
             return "CONNECTION_CLOSE";
         }
-        for(let i = 6; i < data.length; i++) {
-            encoded.push(data[i]);
+        if(this.enabledLongStream) {
+            return 'BUFFER_CONTINUE';
         }
-        for (let i = 0; i < encoded.length; i++) {
-            decoded.push((encoded[i] ^ mask[i % 4]));
+        for (let i = 0; i < this.encodedStreamData.length; i++) {
+            this.decodedStreamData.push((this.encodedStreamData[i] ^ this.mask[i % 4]));
         }
-        return this.arrayToString(decoded);
+        let data = this.arrayToString(this.decodedStreamData);
+        this.resetDecodeData();
+        return data;
     }
 
 
