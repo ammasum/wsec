@@ -13,6 +13,8 @@ module.exports = class {
     encodedStreamData = [];
     streamPayloadLength = 0;
     mask = [];
+    currentData;
+    currentOffset = 2;
 
     constructor(socket, handler, sender) {
         this.socket = socket;
@@ -23,36 +25,57 @@ module.exports = class {
 
     setHandler() {
         this.socket.on('data', (data) => {
-            this.onData(data);
+            this.currentData = data;
+            this.onData();
         });
         this.socket.on('end', () => {
             this.handler.emit('end', this.sender);
         });
     }
 
-    onData(data) {
+    onData() {
         // if not hand shake then first data will be hand shake
         if(!this.handShaked) {
-            this.handShake(data);
+            this.handShake(this.currentData);
             this.handler.emit('connected', this.sender);
             return;
         }
-        this.setDecodeData(data);
-        const decodedData = this.decodeData();
-        if(typeof decodedData === 'string' && decodedData === 'CONNECTION_CLOSE') {
+        if(!this.complateData()) {
             return;
         }
-
-        if(typeof decodedData === 'string' && decodedData === 'BUFFER_CONTINUE') {
-            return;
-        }
-
-        if(typeof decodedData === 'string' && decodedData === 'FRAME_CONTINUE') {
-            return;
-        }
-        data = this.arrayToString(this.frame);
+        const data = this.arrayToString(this.frame);
         // checking data event handler pass throw constructor
         this.handler.emit('data', this.sender, data);
+    }
+
+    decodeStatus(status) {
+        if(typeof status === 'string' && status === 'CONNECTION_CLOSE') {
+            return false;
+        }
+
+        if(typeof status === 'string' && status === 'BUFFER_CONTINUE') {
+            return false;
+        }
+
+        if(typeof status === 'string' && status === 'FRAME_CONTINUE') {
+            return false;
+        }
+        return true;
+    }
+
+    complateData() {
+        let decodedData;
+        this.filterEndingStream()
+        decodedData = this.decodeData();
+        if(this.decodeStatus(decodedData) && this.currentData === null) {
+            return true;
+        }
+        this.setDecodeData();
+        decodedData = this.decodeData();
+        if(this.decodeStatus(decodedData)) {
+            return true;
+        }
+        return false;
     }
 
     arrayToString(data) {
@@ -70,45 +93,67 @@ module.exports = class {
         this.encodedStreamData = [];
     }
 
-    setDecodeData(data) {
+    filterEndingStream() {
         if(this.enabledContinueStream) {
-            this.encodedStreamData = Buffer.concat([this.encodedStreamData, data], this.encodedStreamData.length + data.length);
-            this.enabledContinueStream = false;
+            for(let i = 0; i < this.currentData.length; i++) {
+                if(this.encodedStreamData.length === this.streamPayloadLength) {
+                    this.currentData = this.currentData.slice(i);
+                    return;
+                }
+                this.encodedStreamData.push(this.currentData[i]);
+            }
+            this.currentData = null;
+        }
+    }
+
+    setDecodeData() {
+        if(this.currentData === null) {
             return;
-        } 
-        if(data[0] === 136) {
+        }
+        if(this.currentData[0] === 136) {
             this.endConnection = true;
             return;
         }
         
-        let offset = 2;
-        if(data[0] === 0) {
-            console.log("Condition");
+        if(this.currentData[0] === 128 || this.currentData[0] === 129) {
             this.enabledContinueFrame = false;
         }
-        if(data[0] < 129) {
+        if(this.currentData[0] < 128) {
             this.enabledContinueFrame = true;
         }
-        if(data[1] <= 253) {
-            this.streamPayloadLength = data[1] - 128;
-        } else if(data[1] === 254) {
-            this.streamPayloadLength = (data[offset++] << 8) | (data[offset++]);
+        this.parsePayloadLength();
+        this.mask = [
+            this.currentData[this.currentOffset++],
+            this.currentData[this.currentOffset++],
+            this.currentData[this.currentOffset++],
+            this.currentData[this.currentOffset++]
+        ];
+        this.encodedStreamData = [];
+        for(let i = this.currentOffset; i < this.currentData.length; i++) {
+            this.encodedStreamData.push(this.currentData[i]);
+        }
+
+        this.currentOffset = 2;
+    }
+
+    parsePayloadLength() {
+        if(this.currentData[1] <= 253) {
+            this.streamPayloadLength = this.currentData[1] - 128;
+        } else if(this.currentData[1] === 254) {
+            this.streamPayloadLength = (this.currentData[this.currentOffset++] << 8) | (this.currentData[this.currentOffset++]);
         } else {
-            let payloadLength = (data[offset++] << 8) | (data[offset++]);
-            payloadLength = (payloadLength << 8) | (data[offset++]);
-            payloadLength = (payloadLength << 8) | (data[offset++]);
-            payloadLength = (payloadLength << 8) | (data[offset++]);
-            payloadLength = (payloadLength << 8) | (data[offset++]);
-            payloadLength = (payloadLength << 8) | (data[offset++]);
-            payloadLength = (payloadLength << 8) | (data[offset++]);
+            let payloadLength = (this.currentData[this.currentOffset++] << 8) | (this.currentData[this.currentOffset++]);
+            payloadLength = (payloadLength << 8) | (this.currentData[this.currentOffset++]);
+            payloadLength = (payloadLength << 8) | (this.currentData[this.currentOffset++]);
+            payloadLength = (payloadLength << 8) | (this.currentData[this.currentOffset++]);
+            payloadLength = (payloadLength << 8) | (this.currentData[this.currentOffset++]);
+            payloadLength = (payloadLength << 8) | (this.currentData[this.currentOffset++]);
+            payloadLength = (payloadLength << 8) | (this.currentData[this.currentOffset++]);
             this.streamPayloadLength = payloadLength;
         }
-        this.mask = [data[offset++], data[offset++], data[offset++], data[offset++]];
-        this.encodedStreamData = data.slice(offset);
     }
 
     decodeData() {
-        console.log(this.encodedStreamData.length, this.streamPayloadLength);
         if(this.endConnection) {
             return "CONNECTION_CLOSE";
         }
@@ -124,7 +169,7 @@ module.exports = class {
         if(this.enabledContinueFrame) {
             return 'FRAME_CONTINUE';
         }
-        return 'FRAME_COMPLATED';
+        return 'DATA_COMPLATED';
     }
 
 
