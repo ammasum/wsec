@@ -6,7 +6,7 @@ new wsec({port: 8080}, (socket) => {
         console.log('connected new user');
     });
     socket.on('data', (connection, data) => {
-        fs.writeFile('./test.jpg', data , () => {
+        fs.writeFile('./test.txt', data , () => {
             console.log("Finish");
         });
         // connection.send(data);

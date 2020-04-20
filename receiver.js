@@ -3,8 +3,10 @@ module.exports = class {
     socket;
     handler;
     sender;
+    frame = [];
     endConnection = false;
-    enabledLongStream = false;
+    enabledContinueFrame = false;
+    enabledContinueStream = false;
     decodedStreamData = [];
     encodedStreamData = [];
     streamPayloadLength = 0;
@@ -38,12 +40,17 @@ module.exports = class {
         if(typeof decodedData === 'string' && decodedData === 'CONNECTION_CLOSE') {
             return;
         }
+
         if(typeof decodedData === 'string' && decodedData === 'BUFFER_CONTINUE') {
             return;
         }
 
+        if(typeof decodedData === 'string' && decodedData === 'FRAME_CONTINUE') {
+            return;
+        }
+        data = this.arrayToString(this.frame);
         // checking data event handler pass throw constructor
-        this.handler.emit('data', this.sender, decodedData);
+        this.handler.emit('data', this.sender, data);
     }
 
     arrayToString(data) {
@@ -55,18 +62,16 @@ module.exports = class {
     }
 
     resetDecodeData() {
-        this.enabledLongStream = false;
+        this.enabledContinueStream = false;
         this.streamPayloadLength = 0;
         this.decodedStreamData = [];
         this.encodedStreamData = [];
     }
 
     setDecodeData(data) {
-        if(this.enabledLongStream) {
+        if(this.enabledContinueStream) {
             this.encodedStreamData = Buffer.concat([this.encodedStreamData, data], this.encodedStreamData.length + data.length);
-            if(this.encodedStreamData.length === this.streamPayloadLength) {
-                this.enabledLongStream = false;
-            }
+            this.enabledContinueStream = false;
             return;
         } 
         if(data[0] === 136) {
@@ -75,8 +80,12 @@ module.exports = class {
         }
         
         let offset = 2;
+        if(data[0] === 0) {
+            console.log("Condition");
+            this.enabledContinueFrame = false;
+        }
         if(data[0] < 129) {
-            this.enabledLongStream = true;
+            this.enabledContinueFrame = true;
         }
         if(data[1] <= 253) {
             this.streamPayloadLength = data[1] - 128;
@@ -100,15 +109,19 @@ module.exports = class {
         if(this.endConnection) {
             return "CONNECTION_CLOSE";
         }
-        if(this.enabledLongStream) {
+        if(this.encodedStreamData.length !== this.streamPayloadLength) {
+            this.enabledContinueStream = true;
             return 'BUFFER_CONTINUE';
         }
         for (let i = 0; i < this.encodedStreamData.length; i++) {
             this.decodedStreamData.push((this.encodedStreamData[i] ^ this.mask[i % 4]));
         }
-        let data = this.arrayToString(this.decodedStreamData);
+        this.frame = this.frame.concat(this.decodedStreamData);
         this.resetDecodeData();
-        return data;
+        if(this.enabledContinueFrame) {
+            return 'FRAME_CONTINUE';
+        }
+        return 'FRAME_COMPLATED';
     }
 
 
