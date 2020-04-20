@@ -1,3 +1,5 @@
+// Cut on buffer length where streamPayloadLength === encodedStreamData.length
+
 const headerParser = require('http-headers');
 module.exports = class {
     socket;
@@ -106,6 +108,7 @@ module.exports = class {
     }
 
     decodeData() {
+        console.log(this.encodedStreamData.length, this.streamPayloadLength);
         if(this.endConnection) {
             return "CONNECTION_CLOSE";
         }
