@@ -10,23 +10,25 @@ module.exports = class {
         this.connectionID = (+ new Date()).toString() + '-' + Math.random().toString(36).substring(7);
     }
 
-    formatMessage(dataString) {
-        const jsonByteLength = Buffer.byteLength(dataString);
-        // Note: we're not supporting > 65535 byte payloads at this stage 
-        const lengthByteCount = jsonByteLength < 126 ? 0 : 2; 
-        const payloadLength = lengthByteCount === 0 ? jsonByteLength : 126; 
-        const buffer = Buffer.alloc(2 + lengthByteCount + jsonByteLength); 
-        // Write out the first byte, using opcode `1` to indicate that the message 
-        // payload contains text data 
+    formatMessage(payloadData) {
+        const payloadLength = Buffer.byteLength(payloadData);
+        let payloadIndexLength =  payloadLength
+        let buffer;
+        let offset = 2;
+
+        if(payloadLength > 125) {
+            payloadIndexLength = 126;
+            offset += 2;
+        }
+        buffer = Buffer.alloc(offset + payloadLength);
         buffer.writeUInt8(0b10000001, 0); 
-        buffer.writeUInt8(payloadLength, 1); 
-        // Write the length of the STRING payload to the second byte 
-        let payloadOffset = 2; 
-        if (lengthByteCount > 0) { 
-          buffer.writeUInt16BE(jsonByteLength, 2); payloadOffset += lengthByteCount; 
-        } 
+        buffer.writeUInt8(payloadIndexLength, 1);
+        if(payloadLength > 125) {
+            buffer.writeUInt16BE(payloadLength, 2);
+        }
+        console.log(typeof payloadData);
         // Write the STRING data to the data buffer 
-        buffer.write(dataString, payloadOffset); 
+        buffer.write(payloadData, offset);
         return buffer;
     }
 

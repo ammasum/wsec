@@ -3,7 +3,8 @@ const wsec = require('./index');
 
 new wsec({port: 8080}, (socket) => {
     socket.on('connected', (connection) => {
-        console.log('connected new user');
+        const file = fs.readFileSync('test.txt', 'utf8');
+        connection.send(file);
     });
     socket.on('data', (connection, data) => {
         fs.writeFile('./test.txt', data , () => {
