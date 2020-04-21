@@ -34,13 +34,13 @@ new wsec(options, handler);
 ```
 
 # Client Side
-## This library need no client side library. You navtive methods in Client side
+## This library need no client side library. You can use native methods in Client side
 
 ```JS
 const socketIns = new WebSocket('ws://localhost:8080/socket');
-socketIns.send("Hello server");
-onmessage = function (msg) {
+socketIns.onmessage = function (msg) { // function will fire when data is received
     console.log(msg.data);
+    socketIns.send("Hello server"); // send data to server
 }
 ```
 # Send large file
