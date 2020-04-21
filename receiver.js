@@ -1,4 +1,3 @@
-// Cut on buffer length where streamPayloadLength === encodedStreamData.length
 
 const headerParser = require('http-headers');
 module.exports = class {
@@ -44,6 +43,7 @@ module.exports = class {
             return;
         }
         const data = this.arrayToString(this.frame);
+        this.frame = [];
         // checking data event handler pass throw constructor
         this.handler.emit('data', this.sender, data);
     }
