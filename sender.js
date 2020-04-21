@@ -26,8 +26,6 @@ module.exports = class {
         if(payloadLength > 125) {
             buffer.writeUInt16BE(payloadLength, 2);
         }
-        console.log(typeof payloadData);
-        // Write the STRING data to the data buffer 
         buffer.write(payloadData, offset);
         return buffer;
     }

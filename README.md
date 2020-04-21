@@ -1,5 +1,5 @@
 # wsec
-Nodejs websocket. Easy and customize-able 
+Nodejs websocket. Easy and customize-able and fast
 
 
 # install
@@ -31,4 +31,40 @@ const handler = (socket) => {
 }
 
 new wsec(options, handler);
+```
+
+# Client Side
+## This library need no client side library. You navtive methods in Client side
+
+```JS
+const socketIns = new WebSocket('ws://localhost:8080/socket');
+socketIns.send("Hello server");
+onmessage = function (msg) {
+    console.log(msg.data);
+}
+```
+# Send large file
+```JS
+function fileUpload() {
+    const img = document.createElement('INPUT');
+    img.setAttribute("type", "file"); 
+    img.onchange = () => {
+        this.readFile(img.files[0]);
+    };
+    img.click();
+}
+
+function readFile(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+        this.sendFile(e.target.result);
+    };
+    reader.readAsDataURL(file);
+}
+
+function sendFile(data) {
+    socketIns.send(data);
+}
+
+fileUpload();
 ```
