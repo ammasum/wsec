@@ -32,19 +32,19 @@ module.exports = class {
           this.sendingBuffer.writeUInt32BE(big, 2);
           this.sendingBuffer.writeUInt32BE(low, 6);
         }
-      }
+    }
 
     formatBuffer() {
         const payloadLength = Buffer.byteLength(this.payloadData);
         let bufferStatus = 0b10000001;
-        let bufferLength;
+        let bufferLength = payloadLength;
         let payloadIndexLength =  payloadLength;
 
         if(payloadLength <= 125) {
-            bufferLength = payloadLength;
             payloadIndexLength = payloadLength;
         } else if(payloadLength <= this.maxBufferLength) {
             this.bufferOffset += 2;
+            payloadIndexLength = 126;
         } else if(payloadLength > this.maxBufferLength) {
             bufferLength = this.maxBufferLength;
             payloadIndexLength = 127;
@@ -123,6 +123,7 @@ module.exports = class {
             this.sendingBuffer = null;
             this.bufferOffset = 0;
         }
+        this.bufferOffset = 2;
     }
 
     send(msg) {
