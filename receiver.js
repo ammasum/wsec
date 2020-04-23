@@ -28,6 +28,7 @@ module.exports = class {
             this.onData();
         });
         this.socket.on('end', () => {
+            console.log("Connection end");
             this.handler.emit('end', this.sender);
         });
     }
