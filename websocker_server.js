@@ -37,7 +37,7 @@ module.exports = class {
             new connectionHandler(socket, this.eventHandler);
         })
         this.server.listen(this.port, this.host, () => {
-            console.log(`Server started at http://${this.host}:${this.port}`);
+            console.log(`Server started at ws://${this.host}:${this.port}`);
         });
 
         // Object.keys(ifaces).forEach((ifname) => {
