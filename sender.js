@@ -1,6 +1,6 @@
 const { createHash } = require('crypto');
 module.exports = class {
-    connectionID;
+    state;
     socket;
     headers;
     maxBufferLength = 65500;
@@ -11,7 +11,14 @@ module.exports = class {
     constructor(socket, headers = null) {
         this.socket = socket;
         this.headers = headers;
-        this.connectionID = (+ new Date()).toString() + '-' + Math.random().toString(36).substring(7);
+    }
+
+    setState(data) {
+        this.state = data;
+    }
+    
+    getState() {
+        return this.state;
     }
 
     uintToBase62(n) {
