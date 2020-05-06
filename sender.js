@@ -73,7 +73,7 @@ module.exports = class {
     }
 
     socketKey() {
-        return this.headers.headers['sec-websocket-key'];
+        return this.headers['sec-websocket-key'];
     }
 
     acceptKey() {

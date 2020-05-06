@@ -8,6 +8,7 @@ module.exports = class {
     host = 'localhost';
     port = '8080';
     eventHandler;
+    noServer = false;
 
     // params option is for server option. Like port and host
     // params handler is for handler event and function. Like on data, on end
@@ -15,9 +16,11 @@ module.exports = class {
         if(typeof options !== 'object') {
             handler = options;
             options = {};
+        } else if(options.hasOwnProperty('noServer') && options.noServer) {
+            this.noServer = true;
         }
         this.parseOptions(options);
-        this.parseHandler(handler)
+        this.parseHandler(handler);
         this.createServer();
     }
 
@@ -32,35 +35,20 @@ module.exports = class {
     }
 
     createServer() {
+        if(this.noServer) {
+            return;
+        }
         this.server = net.createServer();
         this.server.on('connection', (socket) => {
-            new connectionHandler(socket, this.eventHandler);
+            new connectionHandler(socket, this.eventHandler, {socketType: 'NET'});
         })
         this.server.listen(this.port, this.host, () => {
             console.log(`Server started at ws://${this.host}:${this.port}`);
         });
+    }
 
-        // Object.keys(ifaces).forEach((ifname) => {
-        //     var alias = 0;
-
-        //     ifaces[ifname].forEach((iface) => {
-        //         if ('IPv4' !== iface.family || iface.internal !== false) {
-        //         // skip over internal (i.e. 127.0.0.1) and non-ipv4 addresses
-        //         return;
-        //         }
-
-        //         if (alias >= 1) {
-        //         // this single interface has multiple ipv4 addresses
-        //         console.log(ifname + ':' + alias, iface.address);
-        //         } else {
-        //         // this interface has only one ipv4 adress
-        //             this.server.listen(this.port, iface.address, () => {
-        //                 console.log(`Server started at http://${iface.address}:${this.port}`);
-        //             });
-        //         }
-        //         ++alias;
-        //     });
-        // });
+    handleHttpServerConnection(request) {
+        new connectionHandler(request, this.eventHandler, {socketType: 'HTTP'});
     }
     
 

@@ -4,6 +4,7 @@ module.exports = class {
     socket;
     handler;
     sender;
+    handShaked = false;
     frame = [];
     endConnection = false;
     enabledContinueFrame = false;
@@ -175,7 +176,13 @@ module.exports = class {
 
 
     handShake(data) {
-        this.sender.setHeader(headerParser(data));
+        if(Buffer.isBuffer(data)) {
+            data = data.toString();
+        }
+        if(typeof data === 'string') {
+            data = headerParser(data).headers;
+        } 
+        this.sender.setHeader(data);
         this.sender.handShake();
         this.handShaked = true; // enable hand shake to prevent hand shake again
     }
