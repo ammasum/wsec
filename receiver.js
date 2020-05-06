@@ -29,7 +29,6 @@ module.exports = class {
             this.onData();
         });
         this.socket.on('end', () => {
-            console.log("Connection end");
             this.handler.emit('end', this.sender);
         });
     }
@@ -38,7 +37,6 @@ module.exports = class {
         // if not hand shake then first data will be hand shake
         if(!this.handShaked) {
             this.handShake(this.currentData);
-            this.handler.emit('connected', this.sender);
             return;
         }
         if(!this.complateData()) {
@@ -184,6 +182,7 @@ module.exports = class {
         } 
         this.sender.setHeader(data);
         this.sender.handShake();
+        this.handler.emit('connected', this.sender);
         this.handShaked = true; // enable hand shake to prevent hand shake again
     }
 }
