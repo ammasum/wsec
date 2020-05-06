@@ -5,7 +5,7 @@ module.exports = class {
     handler;
     sender;
     handShaked = false;
-    frame = [];
+    frame;
     endConnection = false;
     enabledContinueFrame = false;
     enabledContinueStream = false;
@@ -42,8 +42,8 @@ module.exports = class {
         if(!this.complateData()) {
             return;
         }
-        const data = this.arrayToString(this.frame);
-        this.frame = [];
+        const data = this.frame;
+        this.frame = null;
         // checking data event handler pass throw constructor
         this.handler.emit('data', this.sender, data);
     }
@@ -164,7 +164,10 @@ module.exports = class {
         for (let i = 0; i < this.encodedStreamData.length; i++) {
             this.decodedStreamData.push((this.encodedStreamData[i] ^ this.mask[i % 4]));
         }
-        this.frame = this.frame.concat(this.decodedStreamData);
+        if(!this.frame) {
+            this.frame = Buffer.alloc(0);
+        }
+        this.frame = Buffer.concat([this.frame, this.decodedStreamData]);
         this.resetDecodeData();
         if(this.enabledContinueFrame) {
             return 'FRAME_CONTINUE';
