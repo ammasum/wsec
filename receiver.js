@@ -167,7 +167,7 @@ module.exports = class {
         if(!this.frame) {
             this.frame = Buffer.alloc(0);
         }
-        this.frame = Buffer.concat([this.frame, this.decodedStreamData]);
+        this.frame = Buffer.concat([this.frame, Buffer.from(this.decodedStreamData)]);
         this.resetDecodeData();
         if(this.enabledContinueFrame) {
             return 'FRAME_CONTINUE';

@@ -4,11 +4,11 @@ const os = require('os');
 const ifaces = os.networkInterfaces();
 const connectionHandler = require('./connection_handler');
 module.exports = class {
-    server;
     host = 'localhost';
     port = '8080';
-    eventHandler;
     noServer = false;
+    eventHandler;
+    server;
 
     // params option is for server option. Like port and host
     // params handler is for handler event and function. Like on data, on end
