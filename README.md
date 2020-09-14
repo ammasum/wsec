@@ -54,6 +54,7 @@ const handler = (socket) => {
     });
     socket.on('data', (connection, data) => {
         console.log(data);
+        connection.send(JSON.stringify({status: true}));
     });
     socket.on('end', (connection) => {
         console.log("connection closed");
@@ -78,7 +79,7 @@ server.listen(8080, () => {
 # Client Side
 ## This library need no client side library. You can use native methods in Client side
 
-```JS
+```js
 const socketIns = new WebSocket('ws://localhost:8080/socket');
 socketIns.onmessage = function (msg) { // function will fire when data is received
     console.log(msg.data);
@@ -86,7 +87,8 @@ socketIns.onmessage = function (msg) { // function will fire when data is receiv
 }
 ```
 # Send large file
-```JS
+
+```js
 function fileUpload() {
     const img = document.createElement('INPUT');
     img.setAttribute("type", "file"); 
