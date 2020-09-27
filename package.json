@@ -1,6 +1,6 @@
 {
   "name": "wsec",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "Nodejs Websocket. Easy and customize-able",
   "main": "index.js",
   "scripts": {

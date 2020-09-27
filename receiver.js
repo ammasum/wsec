@@ -15,6 +15,7 @@ module.exports = class {
     mask = [];
     currentData;
     currentOffset = 2;
+    pingPong;
 
     constructor(socket, handler, sender) {
         this.socket = socket;
@@ -25,6 +26,7 @@ module.exports = class {
 
     setHandler() {
         this.socket.on('data', (data) => {
+            console.log(data);
             this.currentData = data;
             this.onData();
         });
@@ -39,6 +41,7 @@ module.exports = class {
             this.handShake(this.currentData);
             return;
         }
+        this.pingPong = true;
         if(!this.complateData()) {
             return;
         }
@@ -110,6 +113,9 @@ module.exports = class {
         if(this.currentData === null) {
             return;
         }
+        if(this.currentData[0] === 138) { // can handle ping pong
+            this.pingPong = true;
+        }
         if(this.currentData[0] === 136) {
             this.endConnection = true;
             return;
@@ -175,6 +181,18 @@ module.exports = class {
         return 'DATA_COMPLATED';
     }
 
+    pingPongHandler() {
+        const interval = setInterval(() => { // ping request by interval to alive connection on client side
+            if(!this.pingPong) {
+                clearInterval(interval);
+                this.socket.close();
+                this.handler.emit('end', this.sender);
+            }
+            this.sender.ping();
+            this.pingPong = false;
+        }, 50000)
+    }
+
 
     handShake(data) {
         if(Buffer.isBuffer(data)) {
@@ -187,5 +205,6 @@ module.exports = class {
         this.sender.handShake();
         this.handler.emit('connected', this.sender);
         this.handShaked = true; // enable hand shake to prevent hand shake again
+        this.pingPongHandler();
     }
 }

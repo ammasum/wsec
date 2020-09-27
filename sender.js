@@ -137,6 +137,12 @@ module.exports = class {
         this.write(msg);
     }
 
+    ping() {
+        // 0x89 0x05 0x48 0x65 0x6c 0x6c 0x6f
+        const sendingBuffer = Buffer.from([0x89, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]);
+        this.writeOnSocket(sendingBuffer);
+    }
+
     writeOnSocket(data) {
         this.socket.write(data);
     }
