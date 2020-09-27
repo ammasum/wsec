@@ -26,7 +26,6 @@ module.exports = class {
 
     setHandler() {
         this.socket.on('data', (data) => {
-            console.log(data);
             this.currentData = data;
             this.onData();
         });
@@ -52,6 +51,12 @@ module.exports = class {
     }
 
     decodeStatus(status) {
+        if(typeof status === 'string' && status === 'PINGPONG_DATA') {
+            this.resetDecodeData();
+            this.pingPongData = false;
+            return false;
+        }
+        
         if(typeof status === 'string' && status === 'CONNECTION_CLOSE') {
             return false;
         }
@@ -114,7 +119,7 @@ module.exports = class {
             return;
         }
         if(this.currentData[0] === 138) { // can handle ping pong
-            this.pingPong = true;
+            this.pingPongData = true;
         }
         if(this.currentData[0] === 136) {
             this.endConnection = true;
@@ -160,6 +165,9 @@ module.exports = class {
     }
 
     decodeData() {
+        if(this.pingPongData) {
+            return 'PINGPONG_DATA';
+        }
         if(this.endConnection) {
             return "CONNECTION_CLOSE";
         }
@@ -182,15 +190,18 @@ module.exports = class {
     }
 
     pingPongHandler() {
+        const time = 50000;
         const interval = setInterval(() => { // ping request by interval to alive connection on client side
             if(!this.pingPong) {
                 clearInterval(interval);
-                this.socket.close();
+                if(!this.socket.destroyed) {
+                    this.socket.destroy();
+                }
                 this.handler.emit('end', this.sender);
             }
             this.sender.ping();
             this.pingPong = false;
-        }, 50000)
+        }, 1000)
     }
 
 
