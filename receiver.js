@@ -196,13 +196,14 @@ module.exports = class {
                 clearInterval(interval);
                 if(!this.socket.destroyed) {
                     this.socket.destroy();
+                    this.handler.emit('end', this.sender);
                 }
-                this.handler.emit('end', this.sender);
             }
             this.sender.ping();
             this.pingPong = false;
-        }, 1000)
+        }, time)
     }
+
 
 
     handShake(data) {
